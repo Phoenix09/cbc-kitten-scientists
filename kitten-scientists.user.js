@@ -175,6 +175,35 @@ var run = function() {
                     tectonic: {require: 'antimatter', enabled: false}
                 }
             },
+            religion: {
+                // Should religion upgrades be purchased automatically?
+                enabled: false,
+                trigger: 0.95,
+                items: {
+                    // Ziggurats
+                    unicornTomb:       {require: 'tears', enabled: false, religion: 'ziggurats'},
+                    ivoryTower:        {require: 'tears', enabled: false, religion: 'ziggurats'},
+                    ivoryCitadel:      {require: 'tears', enabled: false, religion: 'ziggurats'},
+                    skyPalace:         {require: 'tears', enabled: false, religion: 'ziggurats'},
+                    unicornUtopia:     {require: 'tears', enabled: false, religion: 'ziggurats'},
+                    sunspire:          {require: 'tears', enabled: false, religion: 'ziggurats'},
+                    marker:            {require: 'tears', enabled: false, religion: 'ziggurats'},
+                    unicornGraveyard:  {require: 'tears', enabled: false, religion: 'ziggurats'},
+                    unicornNecropolis: {require: 'tears', enabled: false, religion: 'ziggurats'},
+                    blackPyramid:      {require: 'tears', enabled: false, religion: 'ziggurats'},
+
+                    // Order of the Sun
+                    solarchant:      {require: 'faith', enabled: false, religion: 'oots'},
+                    scholasticism:   {require: 'faith', enabled: false, religion: 'oots'},
+                    goldenSpire:     {require: 'faith', enabled: false, religion: 'oots'},
+                    sunAltar:        {require: 'faith', enabled: false, religion: 'oots'},
+                    stainedGlass:    {require: 'faith', enabled: false, religion: 'oots'},
+                    solarRevolution: {require: 'faith', enabled: false, religion: 'oots'},
+                    apocripha:       {require: 'faith', enabled: false, religion: 'oots'},
+                    transcendence:   {require: 'faith', enabled: false, religion: 'oots'},
+                    basilica:        {require: 'faith', enabled: false, religion: 'oots'},
+                    templars:        {require: 'faith', enabled: false, religion: 'oots'}                }
+            },
             craft: {
                 // Should resources be crafted automatically?
                 enabled: true,
@@ -315,6 +344,7 @@ var run = function() {
     var Engine = function () {
         this.buildManager = new BuildManager();
         this.spaceManager = new SpaceManager();
+        this.religionManager = new ReligionManager();
         this.craftManager = new CraftManager();
         this.tradeManager = new TradeManager();
         this.religionManager = new ReligionManager();
@@ -324,6 +354,7 @@ var run = function() {
     Engine.prototype = {
         buildManager: undefined,
         spaceManager: undefined,
+        religionManager: undefined,
         craftManager: undefined,
         tradeManager: undefined,
         religionManager: undefined,
@@ -348,6 +379,7 @@ var run = function() {
             if (options.auto.festival.enabled) this.holdFestival();
             if (options.auto.build.enabled) this.build();
             if (options.auto.space.enabled) this.space();
+            if (options.auto.religion.enabled) this.religion();
             if (options.auto.craft.enabled) this.craft();
             if (options.auto.trade.enabled) this.trade();
             if (options.auto.hunt.enabled) this.hunt();
@@ -389,6 +421,25 @@ var run = function() {
 
                 if (!require || trigger <= require.value / require.maxValue) {
                     buildManager.build(name);
+                }
+            }
+        },
+        religion: function () {
+            var builds = options.auto.religion.items;
+            var buildManager = this.religionManager;
+            var craftManager = this.craftManager;
+            var trigger = options.auto.religion.trigger;
+
+            // Render the tab to make sure that the buttons actually exist in the DOM. Otherwise we can't click them.
+            buildManager.manager.render();
+
+            for (var name in builds) {
+                var build = builds[name];
+                var religion = build.religion;
+                var require = !build.require ? false : craftManager.getResource(build.require);
+
+                if (!require || trigger <= require.value / require.maxValue) {
+                    buildManager.build(name, religion);
                 }
             }
         },
@@ -607,6 +658,56 @@ var run = function() {
             for (var panel in panels) {
                 for (var child in panels[panel].children) {
                     if (panels[panel].children[child].id === name) return panels[panel].children[child];
+                }
+            }
+        }
+    };
+
+    // Religion manager
+    // ================
+
+    var ReligionManager = function () {
+        this.manager = new TabManager('Religion');
+        this.crafts = new CraftManager();
+    };
+
+    ReligionManager.prototype = {
+        manager: undefined,
+        crafts: undefined,
+        build: function (name, religion) {
+            var build = this.getBuild(name, religion);
+            var button = this.getBuildButton(name, religion);
+            if (!button || !button.model.enabled || !options.auto.religion.items[name].enabled) return;
+
+            //need to simulate a click so the game updates everything properly
+            button.domNode.click(build);
+            storeForSummary(name, 1, 'build');
+
+            var label = build.label;
+            activity('Kittens have researched ' + label, 'ks-religion');
+        },
+        getBuild: function (name, religion) {
+            var build;
+            switch (religion) {
+                case "ziggurats":
+                    build = game.religion.getZU(name);
+                    break;
+                case "oots":
+                    build = game.religion.getRU(name);
+                    break;
+            }
+            return build;
+        },
+        getBuildButton: function (name, religion) {
+            var build = this.getBuild(name, religion);
+            var label = build.label;
+
+            var buttons = this.manager.tab.zgUpgradeButtons;
+            buttons = buttons.concat(this.manager.tab.rUpgradeButtons);
+            for (var i in buttons) {
+                var haystack = buttons[i].buttonContent.innerText;
+                if(haystack.indexOf(label) !== -1){
+                    return buttons[i];
                 }
             }
         }
@@ -1001,6 +1102,7 @@ var run = function() {
             hunt: options.auto.hunt.trigger,
             build: options.auto.build.trigger,
             space: options.auto.space.trigger,
+            religion: options.auto.religion.trigger,
             craft: options.auto.craft.trigger,
             trade: options.auto.trade.trigger
         };
@@ -1051,6 +1153,7 @@ var run = function() {
                 options.auto.hunt.trigger = saved.triggers.hunt;
                 options.auto.build.trigger = saved.triggers.build;
                 options.auto.space.trigger = saved.triggers.space;
+                options.auto.religion.trigger = saved.triggers.religion;
                 options.auto.craft.trigger = saved.triggers.craft;
                 options.auto.trade.trigger = saved.triggers.trade;
 
@@ -1058,6 +1161,7 @@ var run = function() {
                 $('#trigger-hunt')[0].title = options.auto.hunt.trigger;
                 $('#trigger-build')[0].title = options.auto.build.trigger;
                 $('#trigger-space')[0].title = options.auto.space.trigger;
+                $('#trigger-religion')[0].title = options.auto.religion.trigger;
                 $('#trigger-craft')[0].title = options.auto.craft.trigger;
                 $('#trigger-trade')[0].title = options.auto.trade.trigger;
             }
@@ -1596,6 +1700,18 @@ var run = function() {
         }
     }
 
+    // Grab button labels for religion options
+    var religionManager = new ReligionManager();
+    for (var religionOption in options.auto.religion.items) {
+        var religionItem = options.auto.religion.items[religionOption];
+        var build = religionManager.getBuild(religionOption, religionItem.religion);
+        if (build) {
+            // It's changed to label in 1.3.0.0
+            var title = build.title ? build.title : build.label;
+            options.auto.religion.items[religionOption].label = title;
+        }
+    }
+
     var optionsElement = $('<div/>', {id: 'ks-options', css: {marginBottom: '10px'}});
     var optionsListElement = $('<ul/>');
     var optionsTitleElement = $('<div/>', {
@@ -1610,6 +1726,7 @@ var run = function() {
     optionsListElement.append(getToggle('space',    'Space'));
     optionsListElement.append(getToggle('craft',    'Crafting'));
     optionsListElement.append(getToggle('trade',    'Trading'));
+    optionsListElement.append(getToggle('religion', 'Religion'));
     optionsListElement.append(getToggle('hunt',     'Hunting'));
     optionsListElement.append(getToggle('faith',    'Praising'));
     optionsListElement.append(getToggle('festival', 'Festival'));
