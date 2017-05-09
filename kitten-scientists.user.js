@@ -681,7 +681,7 @@ var run = function() {
 
             //need to simulate a click so the game updates everything properly
             button.domNode.click(build);
-            storeForSummary(name, 1, 'build');
+            storeForSummary(name, 1, 'religion');
 
             var label = build.label;
             activity('Kittens have researched ' + label, 'ks-religion');
@@ -1794,6 +1794,11 @@ var run = function() {
         // Trading
         for (var name in activitySummary.trade) {
             summary('Traded: ' + game.getDisplayValueExt(activitySummary.trade[name]) + 'x ' + ucfirst(name));
+        }
+
+        // Religion upgrades
+        for (var name in activitySummary.religion) {
+            summary('Researched: ' + game.getDisplayValueExt(activitySummary.religion[name]) + 'x ' + ucfirst(name));
         }
 
         // Show time since last run. Assumes that the day and year are always higher.
