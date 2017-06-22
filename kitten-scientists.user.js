@@ -1783,12 +1783,15 @@ var run = function() {
 
         // Buildings
         for (var name in activitySummary.build) {
-            summary('Built: +' + game.getDisplayValueExt(activitySummary.build[name]) + ' ' + ucfirst(name));
+            var label = options.auto.build.items[name].label;
+            label = label.concat(options.auto.space.items[name].label);
+            summary('Built: +' + game.getDisplayValueExt(activitySummary.build[name]) + ' ' + label);
         }
 
         // Crafts
         for (var name in activitySummary.craft) {
-            summary('Crafted: +' + game.getDisplayValueExt(activitySummary.craft[name]) + ' ' + ucfirst(name));
+            var label = options.auto.craft.items[name].label;
+            summary('Crafted: +' + game.getDisplayValueExt(activitySummary.craft[name]) + ' ' + label);
         }
 
         // Trading
@@ -1798,7 +1801,8 @@ var run = function() {
 
         // Religion upgrades
         for (var name in activitySummary.religion) {
-            summary('Researched: ' + game.getDisplayValueExt(activitySummary.religion[name]) + 'x ' + ucfirst(name));
+            var label = options.auto.religion.items[name].label;
+            summary('Researched: ' + game.getDisplayValueExt(activitySummary.religion[name]) + 'x ' + label);
         }
 
         // Show time since last run. Assumes that the day and year are always higher.
