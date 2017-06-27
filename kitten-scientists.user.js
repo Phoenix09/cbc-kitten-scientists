@@ -494,7 +494,7 @@ var run = function() {
             }
         },
         praiseSun: function () {
-            var faith = craftManager.getResource('faith');
+            var faith = this.craftManager.getResource('faith');
 
             if (options.auto.faith.trigger <= faith.value / faith.maxValue) {
                 storeForSummary('faith', faith.value);
