@@ -1790,8 +1790,7 @@ var run = function() {
 
         // Crafts
         for (var name in activitySummary.craft) {
-            var label = options.auto.craft.items[name].label;
-            summary('Crafted: +' + game.getDisplayValueExt(activitySummary.craft[name]) + ' ' + label);
+            summary('Crafted: +' + game.getDisplayValueExt(activitySummary.craft[name]) + ' ' + ucfirst(name));
         }
 
         // Trading
