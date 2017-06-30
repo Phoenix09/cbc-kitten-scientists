@@ -1783,8 +1783,9 @@ var run = function() {
 
         // Buildings
         for (var name in activitySummary.build) {
-            var label = options.auto.build.items[name].label;
-            label = label.concat(options.auto.space.items[name].label);
+            var label;
+            label = options.auto.build.items[name].label;
+            if (!label) label = options.auto.space.items[name].label;
             summary('Built: +' + game.getDisplayValueExt(activitySummary.build[name]) + ' ' + label);
         }
 
